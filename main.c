@@ -47,6 +47,8 @@ int toMMU(int pid, int virtualAdress);
 void showFrames();
 void generateRandomAccesses(int n);
 void showMemoryUsagePerProcess();
+void showMainMemory();
+void showVirtualMemory(int pid);
 
 int main(int argc, char* argv[]){
     init();
@@ -89,7 +91,11 @@ int main(int argc, char* argv[]){
     printf("Hits: %d\n", hits);
     printf("Faults: %d\n", faults);
     printf("=================\n");
+    showMainMemory();
 
+    for(int i = 0; i < MAX_PROC;i++){
+        showVirtualMemory(i);
+    }
 
     return 0;
 }
@@ -229,5 +235,48 @@ void showMemoryUsagePerProcess() {
         int bytes = usage[i] * PAGES_SIZE;
         printf("PID [%d] | Frames: %d | Memory: %d bytes (%.2f KB)\n",
                i, usage[i], bytes, bytes / 1024.0);
+    }
+}
+
+void showMainMemory() {
+    printf("\n=== MAIN MEMORY (RAM) ===\n");
+
+    for (int i = 0; i < N_FRAMES; i++) {
+        printf("Frame %d | PID %d | Page %d | Data preview: ",
+               i, frameToPid[i], frameToPage[i]);
+
+        if (frameUsed[i]) {
+            for (int j = 0; j < 8; j++) {
+                printf("%d ", (unsigned char)mainMemory[i][j]);
+            }
+        } else {
+            printf("EMPTY");
+        }
+
+        printf("\n");
+    }
+}
+
+void showVirtualMemory(int pid) {
+    printf("\n=== VIRTUAL MEMORY (PID %d) ===\n", pid);
+
+    for (int i = 0; i < N_PAGES; i++) {
+        if(pageTable[pid][i].inRAM == 0){
+            continue;
+        }
+        printf("Page %d | In RAM: %d | Frame: %d | Data preview: ",
+               i,
+               pageTable[pid][i].inRAM,
+               pageTable[pid][i].frame);
+
+        if (i < 128) {
+            for (int j = 0; j < 8; j++) {
+                printf("%d ", (unsigned char)virtualMemory[i][j]);
+            }
+        } else {
+            printf("...");
+        }
+
+        printf("\n");
     }
 }
