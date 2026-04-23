@@ -177,14 +177,18 @@ void handlePageFault(int pid, int page) {
     char buffer[PAGES_SIZE];
 
     readPageFromDisk(pid, page, buffer);
-
-    int empty = 1;
-    for (int i = 0; i < PAGES_SIZE; i++) {
-        if (buffer[i] != 0) {
-            empty = 0;
-            break;
+    if (buffer[0] == 0 && buffer[PAGES_SIZE-1] == 0) {
+        for (int i = 0; i < PAGES_SIZE; i++) {
+            buffer[i] = (page + i + pid) % 256;
         }
     }
+    int empty = 1;
+    // for (int i = 0; i < PAGES_SIZE; i++) {
+    //     if (buffer[i] != 0) {
+    //         empty = 0;
+    //         break;
+    //     }
+    // }
 
     if (empty) {
         for (int i = 0; i < PAGES_SIZE; i++) {
@@ -193,8 +197,9 @@ void handlePageFault(int pid, int page) {
         pageToDisk(pid, page, buffer);
     }
 
-    memcpy(mainMemory[frame], virtualMemory[pid][page], PAGES_SIZE); //Como se fosse copiar a página do disco pra RAM
-
+    // memcpy(mainMemory[frame], virtualMemory[pid][page], PAGES_SIZE); //Como se fosse copiar a página do disco pra RAM
+    memcpy(virtualMemory[pid][page], buffer, PAGES_SIZE);
+    memcpy(mainMemory[frame], buffer, PAGES_SIZE);
     enqueue(&fifoStruct, frame);
     printQueue(&fifoStruct);
     printf("[PID %d] DONE | Page %d mapped to Frame %d\n", pid, page, frame);
