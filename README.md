@@ -18,7 +18,7 @@ A C program that simulates a virtual memory management system with paging, page 
 5.  [Usage](#usage)
 6.  [Simulation Details](#simulation-details)
 7.  [File Descriptions](#file-descriptions)
-8.  [Disk Simulation]()
+8.  [Disk Simulation](#disk-simulation)
 9.  [License](#license)
 
 ---
@@ -114,11 +114,18 @@ Data structures used:
 
 ## Components
 
-- `main.c` -- Main simulator implementation
-- `queue.h` -- Queue structure used for FIFO replacement
-- `mainMemory` -- Simulated RAM
-- `virtualMemory` -- Simulated disk memory
-- `pageTable` -- Per-process page tables
+- `main.c` -- Main simulator implementation (MMU, paging, page faults, FIFO)
+- `queue.h` -- Queue used to implement FIFO page replacement
+
+- `mainMemory` -- Simulated physical memory (RAM), organized in frames
+- `virtualMemory` -- Per-process virtual memory (used to initialize page data)
+- `pageTable` -- Per-process page table mapping pages to frames
+
+- `frameToPage` -- Maps each frame to the page currently stored
+- `frameToPid` -- Maps each frame to the owning process (PID)
+- `frameUsed` -- Indicates whether a frame is free or occupied
+
+- `fifoStruct` -- Queue tracking load order for FIFO replacement
 
 ---
 
@@ -132,9 +139,9 @@ Data structures used:
 ---
 
 ### Compilation
-
+```
 gcc main.c -o vm_simulator
-
+```
 Make sure `queue.h` is in the same directory.
 
 ---
@@ -197,15 +204,16 @@ Final output includes:
 | `main.c`          | Core simulation logic (MMU, paging, FIFO) |
 | `queue.h`         | Queue implementation for page replacement |
 | `output (stdout)` | Console logs showing simulation steps     |
+| `logs/`           | Stores binary files that simulate disk |
 
 ---
 
 ## Disk Simulation
 
 In this simulator, the disk is represented by binary files, one per process:
-
+```
 logs/virtual_mem*pid*<pid>.bin
-
+```
 Each file stores the process virtual memory as fixed-size pages:
 
 - Page size: 8 KB
@@ -223,9 +231,9 @@ Each file stores the process virtual memory as fixed-size pages:
 ### Data Generation
 
 Page contents are generated as:
-
+```
 (page + offset + pid) % 256
-
+```
 This ensures:
 
 - Different pages have different data
