@@ -19,7 +19,8 @@ A C program that simulates a virtual memory management system with paging, page 
 6.  [Simulation Details](#simulation-details)
 7.  [File Descriptions](#file-descriptions)
 8.  [Disk Simulation](#disk-simulation)
-9.  [License](#license)
+9.  [Execution Scenarios](#execution-scenarios)
+10.  [License](#license)
 
 ---
 
@@ -240,6 +241,71 @@ This ensures:
 - Different processes have different data
 - Deterministic and reproducible behavior
 
+## Execution Scenarios
+
+The simulator handles the following execution flows:
+
+### 1\. Hit (page already in RAM)
+```
+[PID 0] Request | Virtual Address:  0x3E8 (Page: 0, Offset: 1000)\
+[PID 0] HIT | Page 0 is in Frame 0\
+[PID 0] Translated | Physical Address:  0x3E8\
+[PID 0] VALUE at address: 0
+```
+* * * * *
+
+### 2\. Page Fault (first access → load → hit)
+```
+[PID 0] Request | Virtual Address:  0x3E8 (Page: 0, Offset: 1000)\
+[PID 0] PAGE FAULT | Page 0 not in memory\
+[PID 0] Loading Page 0 into Frame 0...\
+Current Queue: 0\
+[PID 0] DONE | Page 0 mapped to Frame 0
+
+[PID 0] Request | Virtual Address:  0x3E8 (Page: 0, Offset: 1000)\
+[PID 0] HIT | Page 0 is in Frame 0
+```
+* * * * *
+
+### 3\. Page Fault with FIFO Replacement (RAM full)
+```
+[PID 1] Request | Virtual Address:  0x11170 (Page: 8, Offset: 4464)\
+[PID 1] PAGE FAULT | Page 8 not in memory\
+Current Queue: 1 2 3 4 5 6 7\
+[REPLACE] Removing Page 0 (PID 0) from Frame 0\
+[PID 1] Loading Page 8 into Frame 0...\
+Current Queue: 1 2 3 4 5 6 7 0\
+[PID 1] DONE | Page 8 mapped to Frame 0
+```
+* * * * *
+
+### 4\. Re-access after replacement
+```
+[PID 1] Request | Virtual Address:  0x11170 (Page: 8, Offset: 4464)\
+[PID 1] HIT | Page 8 is in Frame 0\
+[PID 1] Translated | Physical Address:  0x1170
+```
+* * * * *
+
+### 5\. Invalid PID
+```
+PID 2 is invalid(PID greater or equal the number of processess [2])
+```
+* * * * *
+
+### 6\. Invalid Address (out of bounds)
+```
+Address  0x35A4E900 is invalid (address is greater or equal the virtual memory size [1048576/0x100000])
+```
+* * * * *
+
+### 7\. Same virtual page, different processes
+```
+[PID 1] Loading Page 97 into Frame 5...\
+[PID 0] Loading Page 97 into Frame 6...
+```
+
+Different PIDs → same page number → different frames/data.
 ## License
 
 This project is intended for educational purposes. You are free to use and modify it as needed.
